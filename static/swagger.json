@@ -1,0 +1,532 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Kütüphane Yönetim API",
+    "version": "1.0.0",
+    "description": "Kitap ödünç alma, iade etme ve kullanıcı işlemleri için REST API"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Ana Sayfa",
+        "description": "API'nin ana sayfasını döndürür.",
+        "responses": {
+          "200": {
+            "description": "Başarılı istek",
+            "content": {
+              "application/json": {
+                "example": "ilter"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/loginJWT": {
+      "post": {
+        "summary": "JWT ile giriş",
+        "description": "Kullanıcı adı/şifre ile JWT token üretir.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string", "example": "admin" },
+                  "password": { "type": "string", "example": "admin123" }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token üretildi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Eksik bilgi" },
+          "401": { "description": "Hatalı kullanıcı adı veya şifre" }
+        }
+      }
+    },
+    "/api/register": {
+      "post": {
+        "summary": "Yeni kullanıcı kaydı",
+        "description": "Yeni bir kullanıcı sistemde kaydedilir.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_name": {
+                    "type": "string",
+                    "description": "Yeni kullanıcı adı"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Yeni kullanıcı şifresi"
+                  }
+                },
+                "required": ["user_name", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Kullanıcı başarıyla kaydedildi" },
+          "400": { "description": "Eksik bilgi" },
+          "409": { "description": "Kullanıcı zaten mevcut" }
+        }
+      }
+    },
+    "/api/borrow": {
+      "post": {
+        "summary": "Kitap ödünç al",
+        "description": "Belirli bir kitabı ödünç alır ve ödünç alma kaydı oluşturur.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "book_id": { "type": "integer" }
+                },
+                "required": ["book_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Kitap başarıyla ödünç alındı" },
+          "400": { "description": "Geçersiz istek" },
+          "401": { "description": "Yetkisiz erişim" },
+          "404": { "description": "Kitap bulunamadı" }
+        }
+      }
+    },
+    "/api/return": {
+      "post": {
+        "summary": "Kitap iade et",
+        "description": "Bir kitabı iade eder ve admin onayı için beklemede olarak işaretler.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "book_id": { "type": "integer" }
+                },
+                "required": ["book_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Kitap başarıyla iade edildi, admin onayı bekliyor" },
+          "400": { "description": "Geçersiz istek veya kitap zaten kütüphanede" },
+          "401": { "description": "Yetkisiz erişim" },
+          "404": { "description": "Kitap bulunamadı" },
+          "500": { "description": "Sunucu hatası" }
+        }
+      }
+    },
+    "/api/books/search": {
+      "get": {
+        "summary": "Kitap Arama",
+        "description": "Kitap ismine veya yazar adına göre arama yapar.",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Aranacak kitap adı veya yazar adı"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Arama sonuçları",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer", "example": 1 },
+                          "book_name": { "type": "string", "example": "Suç ve Ceza" },
+                          "writer": { "type": "string", "example": "Fyodor Dostoyevski" },
+                          "year": { "type": "integer", "example": 1866 },
+                          "isAvailable": { "type": "integer", "example": 0 }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Arama terimi gerekli" }
+        }
+      }
+    },
+    "/api/books/{book_id}": {
+      "get": {
+        "summary": "Belirli bir kitabı getir",
+        "description": "ID'ye göre tek bir kitabı döndürür.",
+        "parameters": [
+          {
+            "name": "book_id",
+            "in": "path",
+            "required": true,
+            "description": "Kitabın ID'si",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Başarılı istek",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 1,
+                  "book_name": "Suç ve Ceza",
+                  "writer": "Fyodor Dostoyevski",
+                  "year": 1866,
+                  "isAvailable": 0
+                }
+              }
+            }
+          },
+          "404": { "description": "Kitap bulunamadı" }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "summary": "Tüm kullanıcıları getir",
+        "description": "Veritabanındaki tüm kullanıcıları listeler.",
+        "responses": {
+          "200": {
+            "description": "Başarılı istek",
+            "content": {
+              "application/json": {
+                "example": [
+                  { "user_id": 1, "user_name": "admin" },
+                  { "user_id": 2, "user_name": "kullanici1" }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/books": {
+      "get": {
+        "summary": "Tüm kitapları getir",
+        "description": "Veritabanındaki tüm kitapları listeler.",
+        "responses": {
+          "200": {
+            "description": "Başarılı istek",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": 1,
+                    "book_name": "Suç ve Ceza",
+                    "writer": "Fyodor Dostoyevski",
+                    "year": 1866,
+                    "isAvailable": 0
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/my-books": {
+      "get": {
+        "summary": "Giriş yapan kullanıcının ödünç aldığı kitapları getirir",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Kullanıcının ödünç aldığı kitaplar listelendi",
+            "content": {
+              "application/json": {
+                "example": {
+                  "borrowed_books": [
+                    {
+                      "book_name": "Yüzüklerin Efendisi",
+                      "author": "J.R.R. Tolkien",
+                      "borrow_date": "2025-07-20 10:00:00",
+                      "return_date": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": { "description": "Yetkisiz erişim" },
+          "404": { "description": "Kullanıcı bulunamadı" }
+        }
+      }
+    },
+    "/api/admin/borrowed-books/page": {
+      "get": {
+        "summary": "Admin: Sayfa sayfa kiralama geçmişini getirir",
+        "description": "Tüm ödünç alınan kitapların sayfalara ayrılmış listesini getirir. Yalnızca admin erişebilir.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "description": "Görüntülenmek istenen sayfa numarası",
+            "schema": { "type": "integer", "default": 1 }
+          }
+        ],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Başarılı",
+            "content": {
+              "application/json": {
+                "example": {
+                  "page": 1,
+                  "per_page": 5,
+                  "total_records": 28,
+                  "total_pages": 6,
+                  "borrowed_books": [
+                    {
+                      "user_id": 1,
+                      "user_name": "admin",
+                      "book_id": 3,
+                      "book_name": "Sefiller",
+                      "author": "Victor Hugo",
+                      "borrow_date": "2025-07-01",
+                      "return_date": "2025-07-10"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": { "description": "Yetkisiz erişim" },
+          "403": { "description": "Sadece admin erişebilir" }
+        }
+      }
+    },
+    "/api/admin/borrowed-books-user/{user_id}": {
+      "get": {
+        "summary": "Admin: Belirli bir kullanıcının ödünç aldığı kitapları getirir",
+        "description": "Belirli bir kullanıcının ödünç alma geçmişini sayfalara ayırarak getirir. Yalnızca admin erişebilir.",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "Kullanıcı ID'si"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Görüntülenmek istenen sayfa numarası",
+            "schema": { "type": "integer", "default": 1 }
+          }
+        ],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Kullanıcının ödünç aldığı kitaplar listelendi",
+            "content": {
+              "application/json": {
+                "example": {
+                  "user_id": 2,
+                  "page": 1,
+                  "per_page": 5,
+                  "total_records": 10,
+                  "total_pages": 2,
+                  "borrowed_books": [
+                    {
+                      "book_name": "Suç ve Ceza",
+                      "author": "Dostoyevski",
+                      "borrow_date": "2025-07-20",
+                      "return_date": "2025-07-27"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": { "description": "Sadece admin erişebilir" },
+          "401": { "description": "Yetkisiz erişim" },
+          "404": { "description": "Kullanıcı bulunamadı" }
+        }
+      }
+    },
+    "/api/admin/borrowed-books/{id}": {
+      "get": {
+        "summary": "Admin: Belirli bir kitabı ödünç alan kullanıcıları getirir",
+        "description": "Belirli bir kitabın ödünç alma geçmişini sayfalara ayırarak getirir. Yalnızca admin erişebilir.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "Kitap ID'si"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Görüntülenmek istenen sayfa numarası",
+            "schema": { "type": "integer", "default": 1 }
+          }
+        ],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Kitabı ödünç alan kullanıcılar listelendi",
+            "content": {
+              "application/json": {
+                "example": {
+                  "book_id": 3,
+                  "page": 1,
+                  "per_page": 5,
+                  "total_records": 8,
+                  "total_pages": 2,
+                  "borrowed_books": [
+                    {
+                      "book_name": "Sefiller",
+                      "kullanici_adi": "ilter",
+                      "kiralama_tarihi": "2025-06-01",
+                      "iade_tarihi": "2025-06-08"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": { "description": "Sadece admin erişebilir" },
+          "401": { "description": "Yetkisiz erişim" },
+          "404": { "description": "Kitap ile ilgili kayıt bulunamadı." }
+        }
+      }
+    },
+    "/gizli-veri": {
+      "get": {
+        "summary": "Gizli Veri Uç Noktası",
+        "description": "Sadece geçerli JWT token ile erişilebilir test uç noktası.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Başarılı: Gizli veri mesajı döndürür." },
+          "401": { "description": "Yetkisiz erişim" }
+        }
+      }
+    },
+    "/api/admin/pending-returns": {
+      "get": {
+        "summary": "Admin: Onay bekleyen iadeleri getirir",
+        "description": "İade durumu 'beklemede' olan kitapları listeler. Yalnızca admin erişebilir.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Başarılı",
+            "content": {
+              "application/json": {
+                "example": {
+                  "pending_returns": [
+                    {
+                      "borrow_id": 12,
+                      "user_name": "ilter",
+                      "book_name": "Yüzüklerin Efendisi",
+                      "borrow_date": "2025-07-20 10:00:00",
+                      "return_date": "2025-07-21 11:30:00",
+                      "status": -1
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": { "description": "Yetkisiz erişim" },
+          "403": { "description": "Sadece admin erişebilir" }
+        }
+      }
+    },
+    "/api/admin/return-status/{borrow_id}": {
+      "patch": {
+        "summary": "Admin: İade durumunu güncelle",
+        "description": "Onay bekleyen bir iade kaydının durumunu (onaylandı/reddedildi vb.) günceller. Yalnızca admin erişebilir.",
+        "parameters": [
+          {
+            "name": "borrow_id",
+            "in": "path",
+            "required": true,
+            "description": "İade kaydının ID'si",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "integer",
+                    "description": "Yeni durum değeri",
+                    "enum": [0, 1, -1]
+                  }
+                },
+                "required": ["status"]
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "İade durumu başarıyla güncellendi." },
+          "400": { "description": "Geçersiz durum değeri" },
+          "401": { "description": "Yetkisiz erişim" },
+          "403": { "description": "Sadece admin erişebilir" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

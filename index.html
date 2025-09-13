@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kütüphane Sistemi</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Kütüphane Sistemi</h1>
+        <nav>
+            <ul>
+                <li><a href="#" id="home-link">Ana Sayfa</a></li>
+                <li><a href="#" id="books-link">Kitaplar</a></li>
+                <li><a href="#" id="my-books-link">Benim Kitaplarim</a></li>
+                <li><a href="#" id="login-link">Giriş / Kayit</a></li>
+                <li><a href="#" id="admin-link" style="display:none;">Admin Paneli</a></li>
+                <li><a href="#" id="logout-link" style="display:none;">Çikiş Yap</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Ana sayfa -->
+        <section id="home-section">
+            <h2>Ana Sayfa</h2>
+            <p>Hoşgeldiniz! Kütüphanemizdeki kitaplari keşfetmek için menüyü kullanabilirsiniz.</p>
+        </section>
+
+        <!-- Kitap listesi -->
+        <section id="books-section" style="display:none;">
+            <h2>Kitap Listesi</h2>
+            <input type="text" id="search-query" placeholder="Kitap veya yazar ara">
+            <button id="search-btn">Ara</button>
+            <ul id="book-list"></ul>
+        </section>
+
+        <!-- Kullanicinin kitaplari -->
+        <section id="my-books-section" style="display:none;">
+            <h2>Benim Kitaplarim</h2>
+            <ul id="my-book-list"></ul>
+        </section>
+
+        <!-- Giriş / Kayit -->
+        <section id="login-section" style="display:none;">
+            <h2>Giriş Yap / Kayit Ol</h2>
+
+            <div id="register-form">
+                <h3>Kayit Ol</h3>
+                <input type="text" id="register-username" placeholder="Kullanici Adi">
+                <input type="password" id="register-password" placeholder="Şifre">
+                <button id="register-btn">Kayit Ol</button>
+            </div>
+
+            <div id="login-form">
+                <h3>Giriş Yap</h3>
+                <input type="text" id="login-username" placeholder="Kullanici Adi">
+                <input type="password" id="login-password" placeholder="Şifre">
+                <button id="login-btn">Giriş Yap</button>
+            </div>
+        </section>
+
+        <!-- Admin paneli -->
+        <section id="admin-section" style="display:none;">
+            <h2>Admin Paneli</h2>
+
+            <h3>Pending İadeler</h3>
+            <ul id="pending-returns-list"></ul>
+
+            <h3>Tüm Ödünç Kitaplar</h3>
+            <button id="prev-page-btn">◀ Önceki</button>
+            <button id="next-page-btn">▶ Sonraki</button>
+            <ul id="all-borrowed-list"></ul>
+
+
+            <h3>Tek Kullanıcının Ödünç Kitapları</h3>
+            <input type="number" id="user-id-input" placeholder="User ID">
+            <button id="user-books-btn">Getir</button>
+            <ul id="user-borrowed-list"></ul>
+
+            <h3>Tek Kitabın Ödünç Kayıtları</h3>
+            <input type="number" id="book-id-input" placeholder="Book ID">
+            <button id="book-borrowed-btn">Getir</button>
+            <ul id="book-borrowed-list"></ul>
+        </section>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
